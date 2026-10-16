@@ -1,0 +1,53 @@
+{
+  "name": "unifiber",
+  "version": "0.1.0",
+  "description": "Typed, fail-safe access to React Native fiber internals for styling libraries (Unistyles, Uniwind), plus adapters for 3rd-party owners of host views (Reanimated).",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "react-native": "src/index.ts",
+  "types": "src/index.ts",
+  "sideEffects": false,
+  "files": [
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test 'test/**/*.test.ts'",
+    "test:prod": "UNIFIBER_MODE=production npm test",
+    "test:rn086": "UNIFIBER_RN=0.86 npm test",
+    "test:all": "npm test && npm run test:prod && npm run test:rn086 && UNIFIBER_MODE=production UNIFIBER_RN=0.86 npm test",
+    "coverage": "node --import tsx --test --experimental-test-coverage --test-coverage-include='src/**' --test-coverage-lines=95 --test-coverage-branches=95 --test-coverage-functions=95 'test/**/*.test.ts'",
+    "check": "npm run typecheck && npm run test:all && npm run coverage",
+    "bench:hermes": "node bench/run-hermes.mjs",
+    "bench:metro": "node bench/metro.mjs"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-native": ">=0.81.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.7",
+    "@babel/runtime": "7.29.10",
+    "@react-native/babel-preset": "0.87.1",
+    "@types/node": "22.20.5",
+    "@types/react": "19.2.18",
+    "esbuild": "0.27.3",
+    "react": "19.2.3",
+    "react-freeze": "1.0.4",
+    "react-native": "0.87.1",
+    "react-native-0.86": "npm:react-native@0.86.3",
+    "react-native-reanimated": "4.7.0",
+    "react-native-reanimated-4.5": "npm:react-native-reanimated@4.5.1",
+    "react-native-unistyles": "3.5.3",
+    "scheduler": "0.27.0",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  }
+}

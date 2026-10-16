@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 6 * * *' # daily: React Native nightly changes every day
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [development, production]
+        rn: ['0.87', '0.86']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: bun install --frozen-lockfile
+      - run: npm run typecheck
+      - run: npm test
+        env:
+          UNIFIBER_MODE: ${{ matrix.mode }}
+          UNIFIBER_RN: ${{ matrix.rn }}
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: bun install --frozen-lockfile
+      - run: npm run coverage
+
+  nightly:
+    # RN nightly + the React it targets (RN bundles a renderer built from React main). Never blocks a merge.
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [development, production]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: bun install --frozen-lockfile
+      - name: React Native nightly + the React it targets
+        run: |
+          REACT_RANGE="$(npm view react-native@nightly peerDependencies.react)"
+          REACT_VERSION="$(npm view "react@${REACT_RANGE}" version --json | node -e "const v = JSON.parse(require('fs').readFileSync(0, 'utf8')); console.log(Array.isArray(v) ? v.at(-1) : v)")"
+          bun add -d react-native@nightly @react-native/babel-preset@nightly "react@${REACT_VERSION}"
+          node -e "console.log('react-native', require('react-native/package.json').version, '/ react', require('react/package.json').version)"
+      - run: npm test
+        env:
+          UNIFIBER_MODE: ${{ matrix.mode }}
