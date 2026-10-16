@@ -1,0 +1,5 @@
+node_modules/
+bench/out/
+coverage/
+*.lcov
+.DS_Store
