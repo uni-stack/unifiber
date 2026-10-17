@@ -14,6 +14,8 @@ type AnimatedComponentLike = {
     props: Record<string, any>
     _cssStyle: Record<string, unknown>
     _CSSManager?: CSSManagerLike
+    // true between componentWillUnmount and componentDidMount: also while frozen, suspended or in a hidden Activity
+    _willUnmount?: boolean
     _updateStyles(props: Record<string, any>): void
     shouldComponentUpdate(nextProps: Record<string, any>, ...rest: Array<unknown>): boolean
 }
@@ -39,6 +41,30 @@ const hasCSSConfig = (cssStyle: Record<string, unknown>) => {
     for (const key in cssStyle) {
         if (key.startsWith('transition') || key.startsWith('animation')) {
             return true
+        }
+    }
+
+    return false
+}
+
+// Keyframe animations and pseudo-styles register again on update after componentWillUnmount cleaned them up.
+// React runs no componentWillUnmount for a subtree deleted while hidden, so on a hidden owner they would leak.
+const registersOnUpdate = (cssStyle: Record<string, unknown>) => {
+    for (const key in cssStyle) {
+        if (key.startsWith('animation')) {
+            return true
+        }
+
+        const value = cssStyle[key]
+
+        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+            for (const selector in value) {
+                if (selector === 'default' || selector.startsWith(':')) {
+                    return true
+                }
+
+                break
+            }
         }
     }
 
@@ -164,6 +190,11 @@ export const reanimatedCSSAdapter: OwnerAdapter<AnimatedComponentLike> = {
     refresh: (owner) => {
         // not mounted yet
         if (typeof owner._CSSManager?.update !== 'function') {
+            return
+        }
+
+        // Hidden transitions still run, so the reveal shows the new value instead of animating from the old one
+        if (owner._willUnmount === true && registersOnUpdate(owner._cssStyle)) {
             return
         }
 

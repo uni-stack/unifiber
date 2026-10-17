@@ -14,7 +14,9 @@ const h = React.createElement
 class FakeCSSManager {
     previous: Record<string, unknown> = {}
     started: Array<[string, unknown, unknown]> = []
+    updates = 0
     update(style: Record<string, unknown>, _props?: unknown) {
+        this.updates++
         const properties = style.transitionProperty as Array<string> | undefined
         for (const key of properties ?? []) {
             if (this.previous[key] !== undefined && this.previous[key] !== style[key]) {
@@ -30,6 +32,7 @@ class AnimatedComponentBase extends React.Component<any> {
     _CSSManager?: FakeCSSManager
     _cssStyle: Record<string, unknown> = {}
     _componentRef: any = null
+    _willUnmount = false
     // 4.7 css/component/AnimatedComponent.native.tsx: forwards, then keeps the ref it animates
     _setComponentRef = (ref: any) => {
         const forwarded = this.props.forwardedRef
@@ -44,6 +47,11 @@ class AnimatedComponentBase extends React.Component<any> {
         this._CSSManager ??= new FakeCSSManager()
         managers.push(this._CSSManager)
         this._CSSManager.update(this._cssStyle, this.props)
+        this._willUnmount = false
+    }
+    // React also calls it when the subtree is hidden (frozen, suspended, hidden Activity)
+    componentWillUnmount() {
+        this._willUnmount = true
     }
     shouldComponentUpdate(nextProps: any) {
         this._updateStyles(nextProps)
@@ -279,4 +287,41 @@ test('stable scope: a rename without a React render still reaches Reanimated CSS
     registry.refresh(linked)
 
     assert.deepEqual(managers[0]!.started, [['backgroundColor', 'red', 'black']])
+})
+
+test('hidden owner with a transition: refreshed while hidden, the reveal shows the new value', () => {
+    const app = (mode: 'visible' | 'hidden') => h(React.Activity, { mode }, h(AnimatedView, { style: makeStyle(transition) }))
+    const tag = render(app('visible'))
+    const manager = managers[0]!
+    render(app('hidden'), tag)
+
+    setTheme('dark')
+    assert.deepEqual(manager.started, [['backgroundColor', 'white', 'black']], 'transition ran while hidden')
+    assert.equal(manager.previous.backgroundColor, 'black')
+
+    manager.started.length = 0
+    render(app('visible'), tag)
+    assert.deepEqual(manager.started, [], 'no transition from the pre-hide value on reveal')
+})
+
+test('hidden owner with a keyframe animation or pseudo-style: not refreshed until it is revealed', () => {
+    for (const extra of [{ animationName: { from: { opacity: 0 } }, animationDuration: 300 }, { opacity: { default: 1, ':pressed': 0.5 }, ...transition }]) {
+        managers.length = 0
+        linked.length = 0
+        globalTheme = 'light'
+        const app = (mode: 'visible' | 'hidden') => h(React.Activity, { mode }, h(AnimatedView, { style: makeStyle(extra) }))
+        const tag = render(app('visible'))
+        const manager = managers[0]!
+        render(app('hidden'), tag)
+        const updates = manager.updates
+
+        setTheme('dark')
+        assert.equal(manager.updates, updates, `${Object.keys(extra)[0]}: nothing re-registers on a hidden owner`)
+
+        setTheme('light')
+        render(app('visible'), tag)
+        setTheme('dark')
+        assert.ok(manager.updates > updates, 'visible again: refreshed')
+        render(null, tag)
+    }
 })

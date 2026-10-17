@@ -13,7 +13,7 @@ const {
     resolveHostFiber,
     shadowNodesOf,
 } = fiber
-const { HostRoot: HOST_ROOT, HostComponent: HOST_COMPONENT, Offscreen: OFFSCREEN, Suspense: SUSPENSE, Activity: ACTIVITY } = fiber.Tag
+const { HostComponent: HOST_COMPONENT, Offscreen: OFFSCREEN, Suspense: SUSPENSE, Activity: ACTIVITY } = fiber.Tag
 
 declare const brand: unique symbol
 export type Host = { readonly [brand]: 'Host' }
@@ -131,32 +131,16 @@ export const getHiddenReasons = (host: Host): number => {
     return reasons
 }
 
-// Stops at the first hidden boundary: the reason (and Freeze's committed props) isn't needed
+// Any hidden Offscreen, as in collectVisibleAncestors. Stops at the first: the reason isn't needed
 export const isHidden = (host: Host): boolean => {
     for (let current = fiberOf(host).return; current; current = current.return) {
-        if (current.tag === OFFSCREEN && (current.return?.tag === SUSPENSE || current.return?.tag === ACTIVITY) && isOffscreenHidden(current)) {
+        if (current.tag === OFFSCREEN && isOffscreenHidden(current)) {
             return true
         }
     }
 
     return false
 }
-// A deletion cuts the deleted subtree's `return`, so its walk ends short of the root. React runs no ref cleanup
-// for a subtree deleted while hidden: check suspended views with this.
-export const isMounted = (host: Host): boolean => {
-    let current = host as unknown as RawFiber | null | undefined
-
-    if (current == null) {
-        return false
-    }
-
-    while (current.return != null) {
-        current = current.return
-    }
-
-    return current.tag === HOST_ROOT
-}
-
 export const isSuspended = (host: Host) => (getHiddenReasons(host) & HiddenBy.Suspense) !== 0
 export const isFrozen = (host: Host) => (getHiddenReasons(host) & HiddenBy.Freeze) !== 0
 export const isInHiddenActivity = (host: Host) => (getHiddenReasons(host) & HiddenBy.Activity) !== 0

@@ -21,7 +21,6 @@ export const Fiber = {
     getParentHost: HostApi.getParentHost,
 
     isHidden: HostApi.isHidden,
-    isMounted: HostApi.isMounted,
     isSuspended: HostApi.isSuspended,
     isFrozen: HostApi.isFrozen,
     isInHiddenActivity: HostApi.isInHiddenActivity,

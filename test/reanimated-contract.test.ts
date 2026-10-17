@@ -31,5 +31,9 @@ for (const [line, root] of Object.entries(REANIMATED)) {
         assert.match(animated, /_updateStyles\(props/)
         assert.match(css, /this\._CSSManager\??\.update\(this\._cssStyle/, "CSS base class pushes _cssStyle to the manager")
         assert.match(factory, /static displayName = `AnimatedComponent\(/)
+        assert.match(css, /componentWillUnmount\(\)[\s\S]{0,1000}?this\._willUnmount = true/, '_willUnmount marks a hidden or unmounted owner')
+        assert.match(css, /this\._willUnmount = false/)
+        const transitions = read(src, 'css/native/managers/CSSTransitionsManager.ts')
+        assert.match(transitions, /unmountCleanup\(\): void \{\s*\/\/ noop\s*\}/, 'transitions survive componentWillUnmount, so hidden owners can be refreshed')
     })
 }

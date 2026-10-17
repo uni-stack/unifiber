@@ -1,10 +1,6 @@
 import type { Context } from 'react'
 import type { ContextReader } from '../fiber'
 import type { Host } from '../host'
-import * as host from '../host'
-
-// Bound once: Metro's inline requires
-const { isHidden } = host
 
 export interface StyleSource {
     readonly name: string
@@ -23,6 +19,7 @@ export interface OwnerAdapter<Owner extends object = object> {
     gate(host: Host): boolean
     claim(host: Host): Owner | null
     attach(owner: Owner, source: StyleSource): void
+    // runs for hidden owners too (frozen, suspended, hidden Activity): skip there what can't run while hidden
     refresh(owner: Owner, source: StyleSource): void
 }
 
@@ -92,23 +89,12 @@ export const createOwnerRegistry = (
                     continue
                 }
 
-                // gate first: the hidden check walks to the root, most hosts have no owner
-                let hidden: boolean | undefined
-
                 for (let i = 0; i < adapters.length; i++) {
                     const adapter = adapters[i]!
 
-                    if (!adapter.gate(host) || disabledAdapters.has(adapter)) {
-                        continue
+                    if (adapter.gate(host) && !disabledAdapters.has(adapter)) {
+                        refreshOwner(adapter, host, seen)
                     }
-
-                    hidden ??= isHidden(host)
-
-                    if (hidden) {
-                        break
-                    }
-
-                    refreshOwner(adapter, host, seen)
                 }
             }
         },

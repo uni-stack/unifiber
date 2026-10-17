@@ -27,7 +27,7 @@ unifiber is the one module that knows what a fiber looks like. It answers questi
 ### ref → Host
 | | |
 |---|---|
-| `getHostFor(ref)` | Native-view refs, RN composites (ScrollView, FlatList / SectionList / VirtualizedList, ImageBackground, KeyboardAvoidingView, RefreshControl), and class components that render their view directly (Button on Android). Call once per link and keep the result. |
+| `getHostFor(ref)` | Native-view refs, RN composites (ScrollView, FlatList / SectionList / VirtualizedList, ImageBackground, KeyboardAvoidingView, RefreshControl), and class components that render their view directly (Button on Android). Any other class component gives the first native view it renders, which may not be the one you styled. Call once per link and keep the result. |
 | `getShadowNodeFor(ref)` | Hot path when you don't keep a Host. |
 | `getHostForInstanceHandle(handle)` | For fibers handed back from C++ (`ShadowNodeFamily::getInstanceHandle`). |
 | `getContentContainerFor(ref)` | ScrollView / list content container, through RN's public `getInnerViewRef()`. |
@@ -45,7 +45,6 @@ unifiber is the one module that knows what a fiber looks like. It answers questi
 | | |
 |---|---|
 | `isHidden(host)` | Inside a Suspense fallback, a frozen screen or a hidden `<Activity>`: suspend instead of unlinking. Also right inside a ref cleanup, where React has not switched the committed tree yet. |
-| `isMounted(host)` | `false` once the view's subtree has been deleted. React runs no ref cleanup for a subtree deleted while hidden, so check suspended views with it on refresh. |
 | `isSuspended` · `isFrozen` · `isInHiddenActivity` | Why. Frozen means react-freeze (react-native-screens `freezeOnBlur`, react-navigation). |
 | `collectVisibleAncestors(hosts, visit)` | Batch refresh. Each visible native view from `hosts` up to the root, visited once, in one shared pass. |
 | `collectAncestors(hosts, visit)` | The same walk, with hidden views included. These are the semantics of Uniwind's `collectHostNodes` today. |
