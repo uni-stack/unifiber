@@ -305,7 +305,9 @@ test('hidden owner with a transition: refreshed while hidden, the reveal shows t
 })
 
 test('hidden owner with a keyframe animation or pseudo-style: not refreshed until it is revealed', () => {
-    for (const extra of [{ animationName: { from: { opacity: 0 } }, animationDuration: 300 }, { opacity: { default: 1, ':pressed': 0.5 }, ...transition }]) {
+    const keyframes = { animationName: { from: { opacity: 0 } }, animationDuration: 300 }
+    // documented trade-off: with a transition too, the reveal animates from the pre-hide value
+    for (const extra of [keyframes, { ...keyframes, ...transition }, { opacity: { default: 1, ':pressed': 0.5 }, ...transition }]) {
         managers.length = 0
         linked.length = 0
         globalTheme = 'light'

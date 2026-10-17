@@ -72,6 +72,8 @@ owners.link(host)        // in the link path: ~86 ns for a plain view
 owners.refresh(hosts)    // after a native-only update
 ```
 
+Hidden views (a frozen screen, Suspense, a hidden `<Activity>`) are refreshed too, so a transition-only view shows the new value when it's revealed. **Trade-off:** a view that also has a keyframe animation (`animation*` keys) or pseudo-style values isn't refreshed while hidden. After it's revealed, it transitions from the pre-hide value to the new one, then settles correctly. Reanimated registers animations and pseudo-styles again on update, and React runs no `componentWillUnmount` for a subtree deleted while hidden, so refreshing them would leak.
+
 An adapter that throws is switched off for the session and reported once. Private Reanimated fields are pinned by a contract test against the 4.5.1 and 4.7.0 sources.
 
 ## Compatibility
