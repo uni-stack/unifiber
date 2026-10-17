@@ -31,6 +31,7 @@ test('malformed fibers: every query answers without throwing', () => {
         assert.equal(Fiber.getHostForInstanceHandle(fiber), undefined)
         assert.doesNotThrow(() => Fiber.getShadowNodes(host))
         assert.doesNotThrow(() => Fiber.isHidden(host))
+        assert.equal(Fiber.isMounted(host), false)
         assert.doesNotThrow(() => Fiber.collectVisibleAncestors([host], (x) => visited.push(x)))
         assert.doesNotThrow(() => Fiber.collectAncestors([host], (x) => visited.push(x)))
         assert.deepEqual(visited, [], 'no canonical: nothing to refresh')
@@ -59,4 +60,5 @@ test('a malformed fiber switches nothing off: real views keep working afterwards
     assert.equal(typeof Fiber.getNativeTag(host), 'number')
     assert.ok(Fiber.getParentHost(host))
     assert.equal(Fiber.isHidden(host), false)
+    assert.equal(Fiber.isMounted(host), true)
 })
