@@ -88,16 +88,27 @@ export const createOwnerRegistry = (
             for (let h = 0; h < hosts.length; h++) {
                 const host = hosts[h]
 
-                if (!host || isHidden(host)) {
+                if (!host) {
                     continue
                 }
+
+                // gate first: the hidden check walks to the root, most hosts have no owner
+                let hidden: boolean | undefined
 
                 for (let i = 0; i < adapters.length; i++) {
                     const adapter = adapters[i]!
 
-                    if (adapter.gate(host) && !disabledAdapters.has(adapter)) {
-                        refreshOwner(adapter, host, seen)
+                    if (!adapter.gate(host) || disabledAdapters.has(adapter)) {
+                        continue
                     }
+
+                    hidden ??= isHidden(host)
+
+                    if (hidden) {
+                        break
+                    }
+
+                    refreshOwner(adapter, host, seen)
                 }
             }
         },
