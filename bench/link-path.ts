@@ -51,10 +51,10 @@ for (const fn of Object.values(cases)) time(fn, 2000) // warm up
 const results: Record<string, Array<number>> = {}
 for (let round = 0; round < 15; round++) {
     const order = round % 2 ? Object.keys(cases).reverse() : Object.keys(cases)
-    for (const name of order) (results[name] ??= []).push(time(cases[name], 500))
+    for (const name of order) (results[name] ??= []).push(time(cases[name]!, 500))
 }
-const median = (xs: Array<number>) => xs.sort((a, b) => a - b)[xs.length >> 1]
-const base = median(results['hostFiberOf only (baseline)'])
+const median = (xs: Array<number>) => xs.sort((a, b) => a - b)[xs.length >> 1]!
+const base = median(results['hostFiberOf only (baseline)']!)
 console.log(`${refs.length} host fibers, ms per pass (median of 15), delta vs baseline`)
 for (const [name, xs] of Object.entries(results)) {
     const m = median(xs)

@@ -73,9 +73,9 @@ let epoch = 0
 let resolveCalls = 0
 const ScopedThemeContext = React.createContext(null)
 const makeStyle = (extra: Record<string, unknown> = {}) => ({
-    backgroundColor: themes[globalTheme].bg, // snapshot, like HostUnistyle._cache
+    backgroundColor: themes[globalTheme]!.bg, // snapshot, like HostUnistyle._cache
     ...extra,
-    unistyles_abc: { uni__getStyles: (scope?: string) => ({ backgroundColor: themes[scope ?? globalTheme].bg, ...extra }) },
+    unistyles_abc: { uni__getStyles: (scope?: string) => ({ backgroundColor: themes[scope ?? globalTheme]!.bg, ...extra }) },
 })
 const source: StyleSource = {
     name: 'unistyles',
@@ -134,7 +134,7 @@ test('theme change without a React render starts the transition to the new value
     render(h(AnimatedView, { style: makeStyle(transition) }))
     setTheme('dark')
 
-    assert.deepEqual(managers[0].started, [['backgroundColor', 'white', 'black']])
+    assert.deepEqual(managers[0]!.started, [['backgroundColor', 'white', 'black']])
 })
 
 test('a later React render with the stale snapshot does not transition back', () => {
@@ -143,16 +143,16 @@ test('a later React render with the stale snapshot does not transition back', ()
     setTheme('dark')
     render(h(AnimatedView, { style }), tag)
 
-    assert.deepEqual(managers[0].started, [['backgroundColor', 'white', 'black']])
-    assert.equal(managers[0].previous.backgroundColor, 'black')
+    assert.deepEqual(managers[0]!.started, [['backgroundColor', 'white', 'black']])
+    assert.equal(managers[0]!.previous.backgroundColor, 'black')
 })
 
 test('second bug: a scoped theme reaches Reanimated at mount, not the global one', () => {
     render(h(ScopedThemeContext, { value: { name: 'red' } }, h(AnimatedView, { style: makeStyle(transition) })))
 
-    assert.equal(managers[0].previous.backgroundColor, 'red')
+    assert.equal(managers[0]!.previous.backgroundColor, 'red')
     setTheme('dark')
-    assert.deepEqual(managers[0].started, [], 'scope still wins after a global flip')
+    assert.deepEqual(managers[0]!.started, [], 'scope still wins after a global flip')
 })
 
 test('per-change cache: re-renders with the same style and epoch resolve once', () => {
@@ -172,7 +172,7 @@ test('Animated views without CSS config are left to Reanimated', () => {
     setTheme('dark')
 
     assert.equal(resolveCalls, 0)
-    assert.deepEqual(managers[0].started, [])
+    assert.deepEqual(managers[0]!.started, [])
 })
 
 test('plain views never get past the gate', () => {
@@ -204,7 +204,7 @@ test('an adapter that throws is switched off, the app keeps rendering', () => {
     broken.link(Fiber.getHostFor(refs[0]))
     broken.link(Fiber.getHostFor(refs[0]))
     assert.equal(reasons.length, 1)
-    assert.match(reasons[0], /broken failed/)
+    assert.match(reasons[0]!, /broken failed/)
 })
 
 test('edge: a mounted ScopedTheme changing its name, read from _reactInternals during render', () => {
@@ -214,7 +214,7 @@ test('edge: a mounted ScopedTheme changing its name, read from _reactInternals d
     const tag = render(app('red'))
     for (const name of ['dark', 'red', 'dark', 'light']) {
         render(app(name), tag)
-        seen.push(managers[0].previous.backgroundColor as string)
+        seen.push(managers[0]!.previous.backgroundColor as string)
     }
     // expected: black, red, black, white
     console.log('# scope flips seen by Reanimated:', seen.join(', '))
@@ -273,10 +273,10 @@ test('reanimated check: the AnimatedComponent whose _componentRef is this host',
 test('stable scope: a rename without a React render still reaches Reanimated CSS transitions', () => {
     const scope = { name: 'red' }
     render(h(ScopedThemeContext, { value: scope }, h(AnimatedView, { style: makeStyle(transition) })))
-    assert.equal(managers[0].previous.backgroundColor, 'red')
+    assert.equal(managers[0]!.previous.backgroundColor, 'red')
 
     scope.name = 'dark'
     registry.refresh(linked)
 
-    assert.deepEqual(managers[0].started, [['backgroundColor', 'red', 'black']])
+    assert.deepEqual(managers[0]!.started, [['backgroundColor', 'red', 'black']])
 })

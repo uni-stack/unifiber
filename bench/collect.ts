@@ -30,7 +30,7 @@ const refs: Array<Array<any>> = [[], [], []]
 const screen = (i: number, frozen: boolean, n: number) =>
     h(Freeze, { key: i, freeze: frozen },
         h(Wrap, { d: SCREEN },
-            ...Array.from({ length: LEAVES }, (_, k) => h('RCTView', { key: k, n, ref: (r: any) => r && (refs[i][k] = r) }))))
+            ...Array.from({ length: LEAVES }, (_, k) => h('RCTView', { key: k, n, ref: (r: any) => r && (refs[i]![k] = r) }))))
 const app = (frozen: [boolean, boolean, boolean], n: number) => h(Wrap, { d: SHELL }, ...frozen.map((f, i) => screen(i, f, n)))
 
 const commit = (element: any) => {
@@ -224,12 +224,12 @@ const measure = (label: string) => {
     const results: Record<string, Array<number>> = {}
     for (let round = 0; round < 7; round++) {
         const names = round % 2 ? Object.keys(cases).reverse() : Object.keys(cases)
-        for (const name of names) (results[name] ??= []).push(time(cases[name]))
+        for (const name of names) (results[name] ??= []).push(time(cases[name]!))
     }
     log(`-- ${label}`)
     for (const name of Object.keys(cases)) {
-        const m = results[name].sort((a, b) => a - b)[3]
-        log(`${name.padEnd(34)} ${m.toFixed(0).padStart(7)} µs   hosts visited ${String(cases[name]()).padStart(4)}`)
+        const m = results[name]!.sort((a, b) => a - b)[3]!
+        log(`${name.padEnd(34)} ${m.toFixed(0).padStart(7)} µs   hosts visited ${String(cases[name]!()).padStart(4)}`)
     }
 }
 

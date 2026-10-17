@@ -74,7 +74,7 @@ const shuffle = <T>(items: Array<T>, seed: number) => {
     for (let i = out.length - 1; i > 0; i--) {
         seed = (seed * 1103515245 + 12345) & 0x7fffffff
         const j = seed % (i + 1)
-        ;[out[i], out[j]] = [out[j], out[i]]
+        ;[out[i], out[j]] = [out[j]!, out[i]!]
     }
     return out
 }

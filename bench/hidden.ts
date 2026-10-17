@@ -28,7 +28,7 @@ const time = (name: string, fn: () => unknown) => {
         for (let i = 0; i < 20000; i++) fn()
         runs.push(((performance.now() - t) * 1e6) / 20000)
     }
-    console.log(`${name.padEnd(36)} ${runs.sort((a, b) => a - b)[5].toFixed(0).padStart(6)} ns  -> ${fn()}`)
+    console.log(`${name.padEnd(36)} ${runs.sort((a, b) => a - b)[5]!.toFixed(0).padStart(6)} ns  -> ${fn()}`)
 }
 console.log(`depth ~${DEPTH * 2 + 4} fibers`)
 time('never toggled: today', () => today(creation))

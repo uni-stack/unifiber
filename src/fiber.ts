@@ -53,7 +53,7 @@ export const resolveHostFiber = (handle: unknown): FiberNode | null => {
     }
 
     for (let i = 0; i < compositeHostRefs.length; i++) {
-        const fiber = hostFiberOf(compositeHostRefs[i](handle))
+        const fiber = hostFiberOf(compositeHostRefs[i]!(handle))
 
         if (fiber) {
             return fiber

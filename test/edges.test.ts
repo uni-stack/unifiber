@@ -173,7 +173,7 @@ test('registry guards: null hosts, hidden fibers, an adapter switched off on the
 
     assert.deepEqual(seen, ['claim'])
     assert.equal(errors.length, 1)
-    assert.match(errors[0], /probe failed: Error: field moved/)
+    assert.match(errors[0]!, /probe failed: Error: field moved/)
 })
 
 test('committedOf: an asymmetric pair under a shared parent answers null (React throws)', () => {

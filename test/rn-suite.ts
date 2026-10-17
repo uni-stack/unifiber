@@ -114,7 +114,7 @@ export const runSuite = (platform: 'ios' | 'android') => {
                 assert.equal(node, unistylesShadowNode(ref), 'Unistyles findShadowNodeForHandle')
             }
             if (c.uniwind) {
-                assert.equal(node, uniwindShadowNode[c.uniwind](ref), `Uniwind ${c.uniwind}`)
+                assert.equal(node, uniwindShadowNode[c.uniwind]!(ref), `Uniwind ${c.uniwind}`)
             }
 
             for (let i = 0; i < 3; i++) {

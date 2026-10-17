@@ -171,7 +171,7 @@ export const collectVisibleAncestors = (hosts: ReadonlyArray<Host | null | undef
         }
 
         for (let i = 0; i < count; i++) {
-            const canonical = pending[i].stateNode.canonical
+            const canonical = pending[i]!.stateNode.canonical
 
             visibleByTag[canonical.nativeTag] = visible ? 1 : 2
 

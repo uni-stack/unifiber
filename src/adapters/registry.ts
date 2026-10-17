@@ -75,7 +75,7 @@ export const createOwnerRegistry = (
             }
 
             for (let i = 0; i < adapters.length; i++) {
-                const adapter = adapters[i]
+                const adapter = adapters[i]!
 
                 if (adapter.gate(host) && !disabledAdapters.has(adapter)) {
                     attachOwner(adapter, host)
@@ -93,7 +93,7 @@ export const createOwnerRegistry = (
                 }
 
                 for (let i = 0; i < adapters.length; i++) {
-                    const adapter = adapters[i]
+                    const adapter = adapters[i]!
 
                     if (adapter.gate(host) && !disabledAdapters.has(adapter)) {
                         refreshOwner(adapter, host, seen)

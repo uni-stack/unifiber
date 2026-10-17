@@ -79,8 +79,8 @@ const mixedKinds = mixed.map((r) => (r instanceof FlatList ? Kind.List : r insta
 const mixedResolvers = mixedKinds.map(shadowNodeResolver)
 
 for (let i = 0; i < mixed.length; i++) {
-    const a = getShadowNodeOfKind(mixed[i], mixedKinds[i])
-    if (!a || a !== mixedResolvers[i](mixed[i]) || (mixedKinds[i] !== Kind.KeyboardAvoidingView && a !== unistylesToday(mixed[i]))) {
+    const a = getShadowNodeOfKind(mixed[i], mixedKinds[i]!)
+    if (!a || a !== mixedResolvers[i]!(mixed[i]) || (mixedKinds[i] !== Kind.KeyboardAvoidingView && a !== unistylesToday(mixed[i]))) {
         throw new Error(`strategies disagree at ${i}`)
     }
 }
@@ -199,10 +199,10 @@ const cases: Record<string, () => void> = {
         for (let i = 0; i < mixed.length; i++) sink += getHostFor(mixed[i])?.getShadowNode() ? 1 : 0
     },
     'mixed 900: getShadowNode(ref, kind)': () => {
-        for (let i = 0; i < mixed.length; i++) sink += getShadowNodeOfKind(mixed[i], mixedKinds[i]) ? 1 : 0
+        for (let i = 0; i < mixed.length; i++) sink += getShadowNodeOfKind(mixed[i], mixedKinds[i]!) ? 1 : 0
     },
     'mixed 900: resolver per wrapper': () => {
-        for (let i = 0; i < mixed.length; i++) sink += mixedResolvers[i](mixed[i]) ? 1 : 0
+        for (let i = 0; i < mixed.length; i++) sink += mixedResolvers[i]!(mixed[i]) ? 1 : 0
     },
 }
 
@@ -216,13 +216,13 @@ for (const fn of Object.values(cases)) time(fn)
 const results: Record<string, Array<number>> = {}
 for (let round = 0; round < 11; round++) {
     const names = round % 2 ? Object.keys(cases).reverse() : Object.keys(cases)
-    for (const name of names) (results[name] ??= []).push(time(cases[name]))
+    for (const name of names) (results[name] ??= []).push(time(cases[name]!))
 }
-const median = (xs: Array<number>) => xs.slice().sort((a, b) => a - b)[xs.length >> 1]
+const median = (xs: Array<number>) => xs.slice().sort((a, b) => a - b)[xs.length >> 1]!
 log(`hosts ${hosts.length}, lists ${lists.length}, mixed ${mixed.length}; µs per pass, median of 11 ABBA rounds`)
 for (const name of Object.keys(results)) {
     const n = name.startsWith('lists') ? lists.length : name.startsWith('hosts') || name.startsWith('kept') ? hosts.length : mixed.length
-    const m = median(results[name])
+    const m = median(results[name]!)
     log(`${name.padEnd(42)} ${m.toFixed(1).padStart(8)} µs   ${((m * 1000) / n).toFixed(1).padStart(7)} ns/ref`)
 }
 if (sink < 0) log(sink)

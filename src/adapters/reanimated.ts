@@ -94,8 +94,9 @@ function updateStylesThroughSource(this: AnimatedComponentLike, props: Record<st
     let contextChanged = false
 
     for (let i = 0; i < contexts.length; i++) {
-        const value = read(contexts[i])
-        const key = state.source.contextKey ? state.source.contextKey(contexts[i], value) : value
+        const context = contexts[i]!
+        const value = read(context)
+        const key = state.source.contextKey ? state.source.contextKey(context, value) : value
 
         if (state.contextKeys[i] !== key) {
             state.contextKeys[i] = key
