@@ -15,7 +15,7 @@
     "README.md"
   ],
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit false --declaration --emitDeclarationOnly --outDir node_modules/.cache/unifiber-declarations",
     "test": "node --import tsx --test 'test/**/*.test.ts'",
     "test:prod": "UNIFIBER_MODE=production npm test",
     "test:rn086": "UNIFIBER_RN=0.86 npm test",

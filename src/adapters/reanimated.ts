@@ -16,7 +16,6 @@ type AnimatedComponentLike = {
     _CSSManager?: CSSManagerLike
     _updateStyles(props: Record<string, any>): void
     shouldComponentUpdate(nextProps: Record<string, any>, ...rest: Array<unknown>): boolean
-    [STATE]?: AttachedState
 }
 
 type AttachedState = {
@@ -32,6 +31,9 @@ type AttachedState = {
 
 // Symbol.for: two copies of unifiber in one bundle never wrap a component twice
 const STATE = Symbol.for('unifiber.reanimated.css')
+
+// Kept out of AnimatedComponentLike: a unique symbol in a public type breaks consumers' declaration builds (TS4023)
+type Attached = AnimatedComponentLike & { [STATE]?: AttachedState }
 
 const hasCSSConfig = (cssStyle: Record<string, unknown>) => {
     for (const key in cssStyle) {
@@ -79,7 +81,7 @@ const isAnimatedComponent = (owner: any): owner is AnimatedComponentLike =>
     owner._cssStyle !== null &&
     typeof owner._cssStyle === 'object'
 
-function updateStylesThroughSource(this: AnimatedComponentLike, props: Record<string, any>) {
+function updateStylesThroughSource(this: Attached, props: Record<string, any>) {
     const state = this[STATE]!
 
     state.original.call(this, props)
@@ -125,7 +127,7 @@ function updateStylesThroughSource(this: AnimatedComponentLike, props: Record<st
 }
 
 // Marks the render phase, where context must be read from React's stack
-function shouldUpdateMarkingRender(this: AnimatedComponentLike, ...args: [Record<string, any>, ...Array<unknown>]) {
+function shouldUpdateMarkingRender(this: Attached, ...args: [Record<string, any>, ...Array<unknown>]) {
     const state = this[STATE]!
 
     state.rendering = true
@@ -141,7 +143,7 @@ export const reanimatedCSSAdapter: OwnerAdapter<AnimatedComponentLike> = {
     name: 'react-native-reanimated/css',
     gate: (host: Host) => (host as unknown as fiber.RawFiber).memoizedProps?.collapsable === false,
     claim: animatedComponentOf,
-    attach: (owner, source) => {
+    attach: (owner: Attached, source) => {
         if (owner[STATE]) {
             return
         }
