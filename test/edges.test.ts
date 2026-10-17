@@ -255,3 +255,33 @@ test('getOwners: names through forwardRef, memo and displayName (dev)', () => {
         assert.deepEqual(owners, [])
     }
 })
+
+test('isHidden without React\'s visibility bit falls back to the committed half of the Offscreen pair', () => {
+    const [rootA, rootB] = pair(U.Tag.HostRoot)
+    const [parentA, parentB] = pair(U.Tag.Suspense)
+    const [hiddenHalf, visibleHalf] = pair(U.Tag.Offscreen)
+    const view = fiber()
+    const fiberRoot = { current: rootA }
+    rootA.stateNode = rootB.stateNode = fiberRoot
+    rootA.child = parentA
+    rootB.child = parentB
+    parentA.return = rootA
+    parentB.return = rootB
+    parentA.child = hiddenHalf
+    parentB.child = visibleHalf
+    hiddenHalf.return = parentA
+    visibleHalf.return = parentB
+    ;(hiddenHalf as any).memoizedState = {}
+    ;(visibleHalf as any).memoizedState = null
+    view.return = visibleHalf
+
+    // no OffscreenInstance: the walk reaches the visible half, but the committed one is hidden
+    assert.equal(Fiber.isHidden(view as unknown as Host), true)
+
+    fiberRoot.current = rootB
+    assert.equal(Fiber.isHidden(view as unknown as Host), false)
+
+    // with React's bit, the bit wins
+    hiddenHalf.stateNode = visibleHalf.stateNode = { _visibility: 0 }
+    assert.equal(Fiber.isHidden(view as unknown as Host), true)
+})

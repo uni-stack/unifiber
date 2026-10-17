@@ -91,6 +91,19 @@ export const committedHalf = (fiber: RawFiber, differs: (a: RawFiber, b: RawFibe
 }
 
 const hiddenStateDiffers = (a: RawFiber, b: RawFiber) => (a.memoizedState === null) !== (b.memoizedState === null)
+
+// React's own visibility bit on the Offscreen instance: shared by both halves and flipped in the commit before refs
+// detach, so it also holds inside a ref cleanup, where the committed half is still the old tree
+const OFFSCREEN_VISIBLE = 1
+const isOffscreenHidden = (offscreen: RawFiber): boolean => {
+    const visibility = offscreen.stateNode?._visibility
+
+    if (typeof visibility === 'number') {
+        return (visibility & OFFSCREEN_VISIBLE) === 0
+    }
+
+    return committedHalf(offscreen, hiddenStateDiffers)?.memoizedState != null
+}
 const freezeDiffers = (a: RawFiber, b: RawFiber) => a.memoizedProps?.freeze !== b.memoizedProps?.freeze
 
 // react-freeze: Freeze > Suspense > Suspender. The Suspender keeps stale props because it throws, so read Freeze's.
@@ -102,7 +115,7 @@ export const getHiddenReasons = (host: Host): number => {
     let reasons = 0
 
     for (let current = fiberOf(host).return; current; current = current.return) {
-        if (current.tag !== OFFSCREEN || committedHalf(current, hiddenStateDiffers)?.memoizedState == null) {
+        if (current.tag !== OFFSCREEN || !isOffscreenHidden(current)) {
             continue
         }
 
@@ -118,7 +131,16 @@ export const getHiddenReasons = (host: Host): number => {
     return reasons
 }
 
-export const isHidden = (host: Host) => getHiddenReasons(host) !== HiddenBy.None
+// Stops at the first hidden boundary: the reason (and Freeze's committed props) isn't needed
+export const isHidden = (host: Host): boolean => {
+    for (let current = fiberOf(host).return; current; current = current.return) {
+        if (current.tag === OFFSCREEN && (current.return?.tag === SUSPENSE || current.return?.tag === ACTIVITY) && isOffscreenHidden(current)) {
+            return true
+        }
+    }
+
+    return false
+}
 export const isSuspended = (host: Host) => (getHiddenReasons(host) & HiddenBy.Suspense) !== 0
 export const isFrozen = (host: Host) => (getHiddenReasons(host) & HiddenBy.Freeze) !== 0
 export const isInHiddenActivity = (host: Host) => (getHiddenReasons(host) & HiddenBy.Activity) !== 0
@@ -127,7 +149,7 @@ const isHiddenOffscreen = (offscreen: RawFiber, boundaries: Map<RawFiber, boolea
     let hidden = boundaries.get(offscreen)
 
     if (hidden === undefined) {
-        hidden = committedHalf(offscreen, hiddenStateDiffers)?.memoizedState != null
+        hidden = isOffscreenHidden(offscreen)
         boundaries.set(offscreen, hidden)
 
         if (offscreen.alternate) {

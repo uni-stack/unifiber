@@ -44,7 +44,7 @@ unifiber is the one module that knows what a fiber looks like. It answers questi
 ### Hidden state
 | | |
 |---|---|
-| `isHidden(host)` | Inside a Suspense fallback, a frozen screen or a hidden `<Activity>`: suspend instead of unlinking. |
+| `isHidden(host)` | Inside a Suspense fallback, a frozen screen or a hidden `<Activity>`: suspend instead of unlinking. Also right inside a ref cleanup, where React has not switched the committed tree yet. |
 | `isSuspended` · `isFrozen` · `isInHiddenActivity` | Why. Frozen means react-freeze (react-native-screens `freezeOnBlur`, react-navigation). |
 | `collectVisibleAncestors(hosts, visit)` | Batch refresh. Each visible native view from `hosts` up to the root, visited once, in one shared pass. |
 | `collectAncestors(hosts, visit)` | The same walk, with hidden views included. These are the semantics of Uniwind's `collectHostNodes` today. |

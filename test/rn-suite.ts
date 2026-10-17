@@ -253,6 +253,55 @@ export const runSuite = (platform: 'ios' | 'android') => {
         assert.equal(all.length, visited.length + 2, 'the two hidden views are included, visible ones once each')
     })
 
+    test(`${platform}: isHidden in ref cleanups: hiding suspends, deleting and ref swaps unlink`, () => {
+        const { Freeze } = require(require('./harness/paths.cjs').REACT_FREEZE)
+        const pending = { then() {} }
+        const Gate = ({ suspend, children }: any) => {
+            if (suspend) throw pending
+            return children
+        }
+        const cleanups: Array<string> = []
+        // inline refs: every re-render also swaps the ref, which must unlink. ScrollView merges refs and calls them with null instead of the cleanup.
+        const hosts = new Map<string, Host>()
+        const record = (label: string, host: Host) => cleanups.push(`${label} ${Fiber.isHidden(host)}`)
+        const at = (label: string) => (r: any) => {
+            if (!r) {
+                record(label, hosts.get(label)!)
+                return
+            }
+            const host = Fiber.getHostFor(r)!
+            hosts.set(label, host)
+            return () => record(label, host)
+        }
+        type S = { freeze: boolean; suspend: boolean; activity: 'visible' | 'hidden'; show: boolean; n: number }
+        const app = (s: S) =>
+            h(RN.View, { testID: `root-${s.n}` },
+                s.show ? h(Freeze, { freeze: s.freeze }, h(RN.ScrollView, { ref: at('frozen') }, h(RN.View))) : null,
+                h(React.Suspense, { fallback: h(RN.View) }, h(Gate, { suspend: s.suspend }, h(RN.Text, { ref: at('suspended') }, 'a'))),
+                h(React.Activity, { mode: s.activity }, h(RN.Pressable, { ref: at('activity') })))
+        let state: S = { freeze: false, suspend: false, activity: 'visible', show: true, n: 0 }
+        const tag = render(app(state))
+        const steps: Array<[Partial<S>, Array<string>]> = [
+            [{ freeze: true }, ['frozen true', 'suspended false', 'activity false']],
+            [{ freeze: false }, ['suspended false', 'activity false']],
+            [{ suspend: true }, ['frozen false', 'suspended true', 'activity false']],
+            [{ suspend: false }, ['frozen false', 'activity false']],
+            [{ activity: 'hidden' }, ['frozen false', 'suspended false', 'activity true']],
+            [{ activity: 'visible' }, ['frozen false', 'suspended false']],
+            [{ freeze: true }, ['frozen true', 'suspended false', 'activity false']],
+            [{ freeze: false }, ['suspended false', 'activity false']],
+            // deleted after a freeze: the other fiber half still says hidden
+            [{ show: false }, ['frozen false', 'suspended false', 'activity false']],
+        ]
+
+        for (const [step, expected] of steps) {
+            state = { ...state, ...step, n: state.n + 1 }
+            cleanups.length = 0
+            rerender(app(state), tag)
+            assert.deepEqual([...cleanups].sort(), [...expected].sort(), `${JSON.stringify(step)}: ${cleanups.join(', ')}`)
+        }
+    })
+
     test(`${platform}: verify + patchRenderedProps on a real View`, () => {
         const style = [{ backgroundColor: 'white' }, { padding: 2 }]
         const { ref } = mount((r) => h(RN.View, { ref: r, style }))
