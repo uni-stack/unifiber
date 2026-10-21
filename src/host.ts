@@ -178,7 +178,7 @@ const isHiddenOffscreen = (offscreen: RawFiber, boundaries: Map<RawFiber, boolea
 
 // Hot loops below: indexed loops and writes, explicit null checks, no helper calls (legacy Hermes)
 export const collectVisibleAncestors = (hosts: ReadonlyArray<Host | null | undefined>, visit: (host: Host) => void) => {
-    const visibleByTag: Array<number> = [] // 1 visible, 2 hidden
+    const visibleByTag = new Map<number, boolean>()
     const boundaries = new Map<RawFiber, boolean>()
     const pending: Array<RawFiber> = []
 
@@ -194,10 +194,10 @@ export const collectVisibleAncestors = (hosts: ReadonlyArray<Host | null | undef
                     break
                 }
 
-                const answer = visibleByTag[stateNode.canonical.nativeTag]
+                const answer = visibleByTag.get(stateNode.canonical.nativeTag)
 
                 if (answer !== undefined) {
-                    visible = answer === 1
+                    visible = answer
                     break
                 }
 
@@ -211,7 +211,7 @@ export const collectVisibleAncestors = (hosts: ReadonlyArray<Host | null | undef
         for (let i = 0; i < count; i++) {
             const canonical = pending[i]!.stateNode.canonical
 
-            visibleByTag[canonical.nativeTag] = visible ? 1 : 2
+            visibleByTag.set(canonical.nativeTag, visible)
 
             if (visible && canonical.internalInstanceHandle != null) {
                 visit(canonical.internalInstanceHandle as Host)
@@ -222,7 +222,7 @@ export const collectVisibleAncestors = (hosts: ReadonlyArray<Host | null | undef
 
 // Hidden hosts included
 export const collectAncestors = (hosts: ReadonlyArray<Host | null | undefined>, visit: (host: Host) => void) => {
-    const visitedByTag: Array<boolean> = []
+    const visitedByTag = new Set<number>()
 
     for (let h = 0; h < hosts.length; h++) {
         for (let current = hosts[h] as unknown as RawFiber | null | undefined; current != null; current = current.return) {
@@ -238,11 +238,11 @@ export const collectAncestors = (hosts: ReadonlyArray<Host | null | undefined>, 
 
             const canonical = stateNode.canonical
 
-            if (visitedByTag[canonical.nativeTag] === true) {
+            if (visitedByTag.has(canonical.nativeTag)) {
                 break
             }
 
-            visitedByTag[canonical.nativeTag] = true
+            visitedByTag.add(canonical.nativeTag)
 
             if (canonical.internalInstanceHandle != null) {
                 visit(canonical.internalInstanceHandle as Host)
