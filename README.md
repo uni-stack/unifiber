@@ -6,7 +6,7 @@
 
 Built for [Unistyles](https://github.com/jpudysz/react-native-unistyles) and Uniwind Pro.
 
-`React 19` · `React Native 0.86 – 0.87` · `iOS + Android` · `Hermes-first` · `MIT`
+`React 19` · `React Native 0.87 – 0.88` · `iOS + Android` · `Hermes-first` · `MIT`
 
 </div>
 
@@ -80,8 +80,8 @@ An adapter that throws is switched off for the session and reported once. Privat
 
 | | |
 |---|---|
-| React | 19.2, and 19.3.1 with RN nightly (fiber tags pinned for 19.x) |
-| React Native | 0.87.1, 0.86.3 · iOS, Android · development and production. CI also runs React Native **nightly** (main) every day; 0.89.0-nightly-20261016 passes |
+| React | 19.3 (RN 0.87 runs its own 19.2 renderer on it), and the React RN nightly targets (fiber tags pinned for 19.x) |
+| React Native | 0.88.1, 0.87.1 · iOS, Android · development and production. CI also runs the **0.89.0-rc.0** release candidate, and React Native **nightly** (main) every day |
 | Reanimated | 4.5.1, 4.7.0 |
 | Unistyles | 3.5.3 and `main` (its real code runs in the suite) |
 | Uniwind | its lookups copied verbatim into the suite |

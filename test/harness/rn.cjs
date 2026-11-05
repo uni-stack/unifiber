@@ -7,6 +7,7 @@ const crypto = require('crypto')
 const Module = require('module')
 
 const { RN, RN_VERSION, REACT, SCHEDULER, BABEL_PRESET: PRESET_DIR, BABEL_CORE: BABEL } = require('./paths.cjs')
+const RN_EXPORTS = require(path.join(RN, 'package.json')).exports ?? {}
 
 module.exports = ({ platform = 'ios', mode = 'development' } = {}) => {
     process.env.NODE_ENV = mode
@@ -77,6 +78,12 @@ module.exports = ({ platform = 'ios', mode = 'development' } = {}) => {
             return path.join(__dirname, 'initialize-core-stub.cjs')
         }
         const base = request === 'react-native' ? path.join(RN, 'index') : request.startsWith('react-native/') ? path.join(RN, request.slice('react-native/'.length)) : null
+        // entry points only in package.json `exports` (eg. react-native/react-private-interface -> ./src/...) must come from the selected RN, not the root one
+        const exported = request.startsWith('react-native/') ? RN_EXPORTS[`./${request.slice('react-native/'.length)}`] : undefined
+        const exportedFile = typeof exported === 'string' ? exported : exported?.default
+        if (typeof exportedFile === 'string') {
+            return path.join(RN, exportedFile)
+        }
         if (base || request.startsWith('.')) {
             const from = base ?? path.resolve(path.dirname(parent?.filename ?? __filename), request)
             for (const ext of exts) {

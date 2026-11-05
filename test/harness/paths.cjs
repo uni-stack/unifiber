@@ -1,4 +1,4 @@
-// UNIFIBER_RN=0.86 selects react-native 0.86; UNISTYLES_DIR points at a Unistyles package dir instead of the npm one
+// UNIFIBER_RN=0.87 / 0.89 selects react-native 0.87 / the 0.89 RC (default 0.88); UNISTYLES_DIR points at a Unistyles package dir instead of the npm one
 const fs = require('fs')
 const path = require('path')
 
@@ -6,8 +6,8 @@ const ROOT = path.resolve(__dirname, '..', '..')
 const nodeModules = path.join(ROOT, 'node_modules')
 const dir = (name) => fs.realpathSync(path.join(nodeModules, name))
 
-const RN_PACKAGES = { '0.87': 'react-native', '0.86': 'react-native-0.86' }
-const rnKey = process.env.UNIFIBER_RN ?? '0.87'
+const RN_PACKAGES = { '0.88': 'react-native', '0.87': 'react-native-0.87', '0.89': 'react-native-0.89' }
+const rnKey = process.env.UNIFIBER_RN ?? '0.88'
 
 if (!RN_PACKAGES[rnKey]) {
     throw new Error(`UNIFIBER_RN=${rnKey}: supported ${Object.keys(RN_PACKAGES).join(', ')}`)
