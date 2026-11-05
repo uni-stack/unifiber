@@ -136,6 +136,22 @@ export const runSuite = (platform: 'ios' | 'android') => {
         assert.equal(Fiber.getShadowNode(parent!), wrapper.stateNode.node)
     })
 
+    test(`${platform}: Modal: getFirstHostChild = the container View that carries Modal's style (RN 0.86+)`, () => {
+        // tags and strings only: a failed assert on fibers renders the whole fiber graph
+        const tagOf = (host: Host | undefined) => (host ? Fiber.getNativeTag(host) : undefined)
+        const { ref } = mount((r) => h(RN.Modal, { ref: r, visible: true, style: { padding: 7 } }, h(RN.View)))
+        const modalHost = Fiber.getHostFor(ref)!
+        const container = Fiber.getFirstHostChild(modalHost)
+
+        assert.match(String((modalHost as any).type), /ModalHostView/)
+        assert.equal(typeof tagOf(container), 'number')
+        assert.equal(tagOf(Fiber.getParentHost(container!)), tagOf(modalHost))
+        assert.match(JSON.stringify((container as any).memoizedProps.style), /"padding":7/, 'the style lands on the container')
+
+        const leaf = mount((r) => h(RN.View, { ref: r })).ref
+        assert.equal(tagOf(Fiber.getFirstHostChild(Fiber.getHostFor(leaf)!)), undefined, 'a leaf has none')
+    })
+
     test(`${platform}: content container = Uniwind accents (contentContainer, column wrapper, header/footer)`, () => {
         // accents.ts:15-29 ScrollView
         const scroll = mount((r) => h(RN.ScrollView, { ref: r, refreshControl: h(RN.RefreshControl, { refreshing: false }) }, h(RN.View))).ref
