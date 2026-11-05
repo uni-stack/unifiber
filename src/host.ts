@@ -13,7 +13,7 @@ const {
     resolveHostFiber,
     shadowNodesOf,
 } = fiber
-const { HostComponent: HOST_COMPONENT, Offscreen: OFFSCREEN, Suspense: SUSPENSE, Activity: ACTIVITY } = fiber.Tag
+const { HostComponent: HOST_COMPONENT, HostRoot: HOST_ROOT, Offscreen: OFFSCREEN, Suspense: SUSPENSE, Activity: ACTIVITY } = fiber.Tag
 
 declare const brand: unique symbol
 export type Host = { readonly [brand]: 'Host' }
@@ -72,8 +72,17 @@ export const getNativeTag = (host: Host): number | undefined => fiberOf(host).st
 
 export const getParentHost = (host: Host): Host | undefined => toHost(hostAncestor(host as unknown as FiberNode))
 
-export const patchRenderedProps = (host: Host, patch: (props: Record<string, any>) => Record<string, any> | undefined): boolean =>
-    patchFiberProps(host as unknown as FiberNode, patch)
+// Composites between the host and the component that rendered it (FlatList -> VirtualizedList -> ScrollView) hold the
+// same props and re-render on their own state, so they are patched too, up to the nearest host ancestor
+export const patchRenderedProps = (host: Host, patch: (props: Record<string, any>) => Record<string, any> | undefined): boolean => {
+    const patched = patchFiberProps(host as unknown as FiberNode, patch)
+
+    for (let parent = fiberOf(host).return; parent && parent.tag !== HOST_COMPONENT && parent.tag !== HOST_ROOT; parent = parent.return) {
+        patchFiberProps(parent as unknown as FiberNode, patch)
+    }
+
+    return patched
+}
 
 export const HiddenBy = {
     None: 0,

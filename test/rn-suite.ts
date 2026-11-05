@@ -328,6 +328,23 @@ export const runSuite = (platform: 'ios' | 'android') => {
         assert.deepEqual(Fiber.verify(host, { backgroundColor: 'black', padding: 2 }), [])
     })
 
+    test(`${platform}: patchRenderedProps reaches the composites a list re-renders its host from`, () => {
+        const style = { backgroundColor: 'white' }
+        const fresh = { backgroundColor: 'black' }
+        const swap = (value: any): any => (value === style ? fresh : Array.isArray(value) ? value.map(swap) : value)
+        const contains = (value: any): boolean => value === style || (Array.isArray(value) && value.some(contains))
+        const list = mount((r) => h(RN.FlatList, { ref: r, style, data: ['a'], keyExtractor: (i: string) => i, renderItem: () => h(RN.View) })).ref
+        const host = Fiber.getHostFor(list)!
+
+        assert.equal(Fiber.patchRenderedProps(host, (props) => (contains(props.style) ? { ...props, style: swap(props.style) } : undefined)), true)
+
+        // VirtualizedList re-renders on its own state (scroll), from the props it was rendered with
+        const update = () => list._listRef.forceUpdate()
+        mode === 'development' ? act(update) : update()
+
+        assert.deepEqual(Fiber.verify(host, { backgroundColor: 'black' }), [])
+    })
+
     test(`${platform}: dev owner names reach the user's component through RN's wrappers`, () => {
         function ProfileCard() {
             return h(RN.Pressable, { ref: (r: any) => r && (card = r) }, h(RN.Text, null, 'x'))
