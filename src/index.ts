@@ -19,6 +19,7 @@ export const Fiber = {
     getShadowNodes: HostApi.getShadowNodes,
     getNativeTag: HostApi.getNativeTag,
     getParentHost: HostApi.getParentHost,
+    getFirstHostChild: HostApi.getFirstHostChild,
 
     isHidden: HostApi.isHidden,
     isSuspended: HostApi.isSuspended,

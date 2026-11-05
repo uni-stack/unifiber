@@ -56,6 +56,9 @@ export const getContentContainerFor = (ref: any): Host | undefined => {
     return getHostFor(scroll?.getInnerViewRef?.())
 }
 
+// The first host on the first-child path below the host: a composite's own wrapper, like Modal's container View
+export const getFirstHostChild = (host: Host): Host | undefined => toHost(firstHostBelow(fiberOf(host).child as unknown as FiberNode))
+
 export const getShadowNode = (host: Host): ShadowNode | undefined => fiberOf(host).stateNode?.node
 
 // Two nodes only while a render is in flight; after a commit both halves share one
