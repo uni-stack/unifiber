@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         mode: [development, production]
-        rn: ['0.87', '0.86']
+        rn: ['0.88', '0.87', '0.89'] # 0.89 is the release candidate
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
